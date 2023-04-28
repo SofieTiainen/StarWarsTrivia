@@ -77,13 +77,18 @@ let btn1Counter = 0;
 let btn2Counter = 0;
 let selectedCharacters1 = [];
 let selectedCharacters2 = [];
-let h2 = document.querySelector("h2");
-let ulDiv = document.querySelector("#ulContainer");
+
+let h2 = document.querySelector("#h2");
+let ulContainer = document.querySelector(".ul-container");
+
 let list1 = document.querySelector("#ul1");
 let list2 = document.querySelector("#ul2");
-let btnDiv = document.querySelector("#buttonDiv");
-let lastDiv = document.querySelector("#lastDiv");
-let moreDiv = document.querySelector("#oneMoreDiv");
+
+let btnContainer = document.querySelector(".button-container");
+
+let firstInfoDiv = document.querySelector(".first-info-div");
+let secondInfoDiv = document.querySelector(".second-info-div");
+
 let extraInfoDiv1 = document.querySelector("#extraInfoDiv1");
 let extraInfoDiv2 = document.querySelector("#extraInfoDiv2");
 let extraInfoDiv3 = document.querySelector("#extraInfoDiv3");
@@ -100,6 +105,9 @@ let getAllCharacters = async () => {
 /*För varje person skapas 2 li-element och 2 radiobuttons i varsina listor. Ger radiobuttons olika namn för att gruppera. Sedan skapas eventListeners för varje knapp och för varje click pushas radioBtn.value(karaktärens egna url)in i en array. 
 
 Varje lista med karaktärernas namn, har en egen chosenCharacters array, som det valda värdet pushas in i. Om vi klickar på en radioBtn i samma lista mer än 1 gång, tas det första indexet i arrayen bort(det föregånga radioBtn-valet) och tillslut har vi 2 arrayer med en karaktärs url i varje, karaktären är den man valt sist*/
+
+// let isTeacher = document.querySelector("#teacherCheck").checked;
+
 let createList = (person) => {
     let radioBtn1 = document.createElement("input");
     radioBtn1.type = "radio";
@@ -157,42 +165,48 @@ let showData = () => {
         if (existingShowDataBtn) {
             existingShowDataBtn.remove();
         }
-        let showDataBtn = document.createElement("button");
-        showDataBtn.id = "showDataBtn";
-        showDataBtn.innerText = "Next";
-        btnDiv.append(showDataBtn);
 
-        showDataBtn.addEventListener("click", async () => {
-            ulDiv.innerText = "";
-            btnDiv.innerText = "";
-            h2.innerText = "Your chosen characters are.."
-            /*Hämtar karaktärernas data från deras url och pushar in datan i en ny array som heter infoArray. 
-            I loopen skapas också ett id utifrån vilken siffra karaktären har sist i sin url genom split och splice.*/
-            selectedCharacters.forEach(async (char) => {
-                let info = await getData(char);
-                let id = info.url.split("/").splice(-2, 1);
-                let imgUrl = `assets/${id}.png`;
-                info.pictureUrl = imgUrl;
-                infoArray.push(info);
+        if (JSON.stringify(selectedCharacters1) === JSON.stringify(selectedCharacters2)) {
+            firstInfoDiv.innerText = "Please choose 2 different characters"
+        } else {
+            firstInfoDiv.innerText = "";
+            let showDataBtn = document.createElement("button");
+            showDataBtn.id = "showDataBtn";
+            showDataBtn.innerText = "NEXT";
+            btnContainer.append(showDataBtn);
 
-                /*För varje karaktär skapas en instans av Character-klassen och så skriver vi ut namn och tillhörande bild.*/
-                let chosenCharacter = new Character(info.name, info.eye_color, info.gender, info.height, info.mass, info.hair_color, info.skin_color, info.films, info.pictureUrl);
+            showDataBtn.addEventListener("click", async () => {
+                ulContainer.innerText = "";
+                btnContainer.innerText = "";
+                h2.innerText = "Your chosen characters are.."
+                /*Hämtar karaktärernas data från deras url och pushar in datan i en ny array som heter infoArray. 
+                I loopen skapas också ett id utifrån vilken siffra karaktären har sist i sin url genom split och splice.*/
+                selectedCharacters.forEach(async (char) => {
+                    let info = await getData(char);
+                    let id = info.url.split("/").splice(-2, 1);
+                    let imgUrl = `assets/images/${id}.png`;
+                    info.pictureUrl = imgUrl;
+                    infoArray.push(info);
 
-                let infoDiv = document.createElement("div");
-                infoDiv.setAttribute("class", "characterDiv");
-                infoDiv.innerHTML = `<img src="${chosenCharacter.pictureUrl}" height="400" ></img><strong>${chosenCharacter.name}</strong>`
-                ulDiv.append(infoDiv);
+                    /*För varje karaktär skapas en instans av Character-klassen och så skriver vi ut namn och tillhörande bild.*/
+                    let chosenCharacter = new Character(info.name, info.eye_color, info.gender, info.height, info.mass, info.hair_color, info.skin_color, info.films, info.pictureUrl);
+
+                    let infoDiv = document.createElement("div");
+                    infoDiv.setAttribute("class", "characterDiv");
+                    infoDiv.innerHTML = `<img src="${chosenCharacter.pictureUrl}" height="400" ></img><strong>${chosenCharacter.name}</strong>`
+                    ulContainer.append(infoDiv);
+                })
+
+                /*Tillslut innehåller vår infoArray data från bägge valda karaktärerna vilket skickas iväg med compareCharacters-funktionen */
+                let compareBtn = document.createElement("button");
+                compareBtn.innerText = "Compare Characters";
+                btnContainer.append(compareBtn);
+
+                compareBtn.addEventListener("click", function () {
+                    compareCharacters(infoArray);
+                })
             })
-
-            /*Tillslut innehåller vår infoArray data från bägge valda karaktärerna vilket skickas iväg med compareCharacters-funktionen */
-            let compareBtn = document.createElement("button");
-            compareBtn.innerText = "Compare Characters";
-            btnDiv.append(compareBtn);
-
-            compareBtn.addEventListener("click", function () {
-                compareCharacters(infoArray);
-            })
-        })
+        }
     }
 }
 
@@ -202,13 +216,13 @@ let createCharacter = (person, element) => {
 
     element.innerHTML = `<strong>Eyecolor: </strong>${character.eyeColor}<br><strong>Gender: </strong>${character.gender}<br><strong>Height: </strong>${character.height} cm<br><strong>Weight: </strong>${character.mass} kg<br><strong>Haircolor: </strong>${character.hairColor}<br><strong>SkinColor: </strong>${character.skinColor}<br><strong>Number of movies </strong>${character.name}<br> has appeared in: ${character.movies.length}`;
 
-    lastDiv.append(element);
+    firstInfoDiv.append(element);
     return character;
 }
 
 /*Utifrån infoArray tilldelas person1 och person2 sin info och utifrån dessa 2 kallas funktionen createCharacters. Skickar även med diven som instansen av klassen ska appendas i*/
 let compareCharacters = (infoArray) => {
-    btnDiv.innerText = "";
+    btnContainer.innerText = "";
     h2.innerText = "Let's compare your chosen characters!"
 
     let person1 = infoArray[0];
@@ -226,50 +240,50 @@ let compareCharacters = (infoArray) => {
 
     /*Jämför instanserna med varandra */
     if (character1.height > character2.height) {
-        moreDiv.innerHTML += (`${character1.name} is taller than ${character2.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} is taller than ${character2.name}<br>`);
     } else if (character1.height < character2.height) {
-        moreDiv.innerHTML += (`${character2.name} is taller than ${character1.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character2.name} is taller than ${character1.name}<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} are the same height<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} are the same height<br>`);
     }
 
 
     if (character1.mass > character2.mass) {
-        moreDiv.innerHTML += (`${character1.name} weights more than ${character2.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} weights more than ${character2.name}<br>`);
     } else if (character2.mass > character1.mass) {
-        moreDiv.innerHTML += (`${character2.name} weights more than ${character1.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character2.name} weights more than ${character1.name}<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} weights the same<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} weights the same<br>`);
     }
 
 
     if (character1.movies.length > character2.movies.length) {
-        moreDiv.innerHTML += (`${character1.name} has appeard in more movies then ${character2.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} has appeard in more movies then ${character2.name}<br>`);
     } else if (character2.movies.length > character1.movies.length) {
-        moreDiv.innerHTML += (`${character2.name} has appeard in more movies then ${character1.name}<br>`);
+        secondInfoDiv.innerHTML += (`- ${character2.name} has appeard in more movies then ${character1.name}<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} has appeard in the same amount of movies<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} has appeard in the same amount of movies<br>`);
     }
 
 
     if (character1.gender === character2.gender) {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} have the same gender<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} have the same gender<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} are different genders<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} are different genders<br>`);
     }
 
 
     if (character1.hairColor === character2.hairColor) {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} have the same haircolor<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} have the same haircolor<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} have different haircolors<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} have different haircolors<br>`);
     }
 
 
     if (character1.skinColor === character2.skinColor) {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} have the same skincolor<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} have the same skincolor<br>`);
     } else {
-        moreDiv.innerHTML += (`${character1.name} and ${character2.name} have different skincolors<br>`);
+        secondInfoDiv.innerHTML += (`- ${character1.name} and ${character2.name} have different skincolors<br>`);
     }
 
     /*Skapar alla knappar för metoderna. 
