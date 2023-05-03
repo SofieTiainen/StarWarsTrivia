@@ -1,3 +1,5 @@
+console.log("hej")
+
 class Character {
     constructor(name, eyeColor, gender, height, mass, hairColor, skinColor, movies, pictureUrl) {
         this.name = name;
